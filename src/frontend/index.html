@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionAssist - Real-Time Object Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a2a3a, #0d1b2a);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .subtitle {
+            color: #8899aa;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .video-container {
+            position: relative;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        #video {
+            display: none;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-start {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(45deg, #dc3545, #e83e8c);
+            color: white;
+        }
+
+        .btn-audio {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: white;
+        }
+
+        .btn-contrast {
+            background: linear-gradient(45deg, #6f42c1, #e83e8c);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #00ff88;
+        }
+
+        #status {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .output-panel {
+            background: #000;
+            color: #00ff88;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #00ff88;
+            margin-top: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #8899aa;
+            margin-top: 5px;
+        }
+
+        .contrast-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .btn {
+                min-width: 120px;
+                padding: 10px 20px;
+            }
+            
+            .controls {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 VisionAssist</h1>
+        <div class="subtitle">Real-Time Object Detection with YOLO Segmentation 
+            <span class="contrast-badge" id="contrastBadge">HIGH CONTRAST</span>
+        </div>
+        
+        <div class="status-panel">
+            <div id="status">Initializing camera...</div>
+        </div>
+
+        <div class="video-container">
+            <canvas id="canvas" width="640" height="480"></canvas>
+            <video id="video" autoplay playsinline></video>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="objectCount">0</div>
+                <div class="stat-label">Objects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fpsCounter">0</div>
+                <div class="stat-label">FPS</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="confidence">0%</div>
+                <div class="stat-label">Avg Confidence</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" onclick="startDetection()">🎬 Start Detection</button>
+            <button class="btn btn-stop" onclick="stopDetection()">⏹️ Stop</button>
+            <button class="btn btn-audio" onclick="speakDetection()">🔊 Audio Report</button>
+            <button class="btn btn-contrast" onclick="toggleContrastMode()">🎨 Toggle Contrast</button>
+        </div>
+
+        <div class="output-panel" id="output">
+Status: Waiting for initialization...
+Last update: --
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const statusElement = document.getElementById("status");
+        const outputElement = document.getElementById("output");
+        const objectCountElement = document.getElementById("objectCount");
+        const fpsCounterElement = document.getElementById("fpsCounter");
+        const confidenceElement = document.getElementById("confidence");
+        const contrastBadge = document.getElementById("contrastBadge");
+
+        // Configuration
+        const API_URL = "http://localhost:5001/detect";
+        const DETECTION_INTERVAL = 2000; // Process every 2 seconds
+        
+        // Application State
+        let isProcessing = false;
+        let lastDetections = [];
+        let frameCount = 0;
+        let lastFpsTime = 0;
+        let currentFps = 0;
+        let detectionInterval;
+        let highContrastMode = true;
+
+        // Color Schemes for different contrast modes
+        const colorSchemes = {
+            highContrast: {
+                border: "#FFFF00", // Bright Yellow
+                fill: "rgba(0, 0, 139, 0.4)", // Dark Blue
+                textBackground: "#000000", // Black
+                textColor: "#FFFFFF" // White
+            },
+            normal: {
+                border: "#00FF00", // Green
+                fill: "rgba(0, 255, 0, 0.2)", // Light Green
+                textBackground: "#000000", // Black
+                textColor: "#FFFFFF" // White
+            }
+        };
+
+        // Camera Initialization
+        async function initCamera() {
+            try {
+                statusElement.textContent = "📷 Accessing camera...";
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 30 }
+                    } 
+                });
+                
+                video.srcObject = stream;
+                
+                video.addEventListener("loadedmetadata", () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    statusElement.textContent = "✅ Camera ready - Click Start Detection";
+                    startFpsCounter();
+                });
+                
+            } catch (error) {
+                console.error("Camera error:", error);
+                statusElement.textContent = "❌ Camera error: " + error.message;
+                outputElement.textContent = `Error: ${error.message}\nPlease ensure camera permissions are granted.`;
+            }
+        }
+
+        // Contrast Mode Toggle
+        function toggleContrastMode() {
+            highContrastMode = !highContrastMode;
+            contrastBadge.textContent = highContrastMode ? "HIGH CONTRAST" : "NORMAL MODE";
+            contrastBadge.style.background = highContrastMode ? "#ffc107" : "#00ff88";
+            contrastBadge.style.color = highContrastMode ? "#000" : "#fff";
+            
+            // Redraw current detections with new colors
+            if (lastDetections.length > 0) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                drawDetections(lastDetections);
+            }
+            
+            statusElement.textContent = highContrastMode ? 
+                "✅ High contrast mode activated" : 
+                "✅ Normal mode activated";
+        }
+
+        // FPS Counter
+        function startFpsCounter() {
+            function updateFps() {
+                frameCount++;
+                const now = performance.now();
+                
+                if (now - lastFpsTime >= 1000) {
+                    currentFps = Math.round((frameCount * 1000) / (now - lastFpsTime));
+                    fpsCounterElement.textContent = currentFps;
+                    frameCount = 0;
+                    lastFpsTime = now;
+                }
+                
+                requestAnimationFrame(updateFps);
+            }
+            updateFps();
+        }
+
+        // Detection Control
+        function startDetection() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            statusElement.textContent = "🎯 Processing with YOLO...";
+            outputElement.textContent = "Starting object detection...\n";
+            
+            // Process frames continuously
+            processFrame();
+            
+            // Set up periodic detection
+            detectionInterval = setInterval(() => {
+                if (isProcessing) {
+                    detectObjects();
+                }
+            }, DETECTION_INTERVAL);
+        }
+
+        function stopDetection() {
+            isProcessing = false;
+            clearInterval(detectionInterval);
+            statusElement.textContent = "⏹️ Detection stopped";
+            lastDetections = [];
+            updateStats();
+            
+            // Draw clean video frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+
+        // Frame Processing
+        function processFrame() {
+            if (!isProcessing) return;
+
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // Draw video frame
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Draw existing detections if any
+                if (lastDetections.length > 0) {
+                    drawDetections(lastDetections);
+                }
+            }
+
+            requestAnimationFrame(processFrame);
+        }
+
+        // Object Detection
+        async function detectObjects() {
+            if (!isProcessing) return;
+
+            try {
+                const blob = await new Promise(resolve => 
+                    canvas.toBlob(resolve, 'image/jpeg', 0.8)
+                );
+
+                const formData = new FormData();
+                formData.append("file", blob, "frame.jpg");
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    lastDetections = data.detections || [];
+                    updateStats();
+                    updateOutput(data);
+                } else {
+                    throw new Error(data.error || "Detection failed");
+                }
+                
+            } catch (error) {
+                console.error("Detection error:", error);
+                statusElement.textContent = "❌ Detection error";
+                outputElement.textContent = `Error: ${error.message}\nPlease ensure backend is running on port 5001.`;
+            }
+        }
+
+        // Drawing Functions - OPTIMIZED FOR LOW VISION
+        function drawDetections(detections) {
+            const colors = highContrastMode ? colorSchemes.highContrast : colorSchemes.normal;
+            
+            detections.forEach((detection, index) => {
+                if (detection.polygon && detection.polygon.length > 0) {
+                    // ✅ IMPROVED CONFIGURATION FOR LOW VISION
+                    ctx.strokeStyle = colors.border;
+                    ctx.lineWidth = 8; // ✅ DOUBLED border thickness for better visibility
+                    ctx.globalAlpha = 0.9;
+                    
+                    // ✅ DRAW COMPLETE POLYGON
+                    ctx.beginPath();
+                    ctx.moveTo(detection.polygon[0][0], detection.polygon[0][1]);
+                    
+                    for (let i = 1; i < detection.polygon.length; i++) {
+                        ctx.lineTo(detection.polygon[i][0], detection.polygon[i][1]);
+                    }
+                    
+                    ctx.closePath();
+                    
+                    // ✅ SEMI-TRANSPARENT FILL
+                    ctx.fillStyle = colors.fill;
+                    ctx.fill();
+                    
+                    // ✅ THICK BORDER (DOUBLED)
+                    ctx.stroke();
+                    
+                    // ✅ IMPROVED LABEL - MAXIMUM LEGIBILITY
+                    ctx.globalAlpha = 1.0;
+                    ctx.font = "bold 16px Arial"; // Larger and bold text
+                    
+                    const labelText = `${detection.label} ${Math.round(detection.confidence * 100)}%`;
+                    
+                    // Find top point for label placement
+                    let minY = detection.polygon[0][1];
+                    let correspondingX = detection.polygon[0][0];
+                    
+                    for (let i = 1; i < detection.polygon.length; i++) {
+                        if (detection.polygon[i][1] < minY) {
+                            minY = detection.polygon[i][1];
+                            correspondingX = detection.polygon[i][0];
+                        }
+                    }
+                    
+                    // ✅ TEXT BACKGROUND - BETTER LEGIBILITY
+                    const textWidth = ctx.measureText(labelText).width;
+                    ctx.fillStyle = colors.textBackground;
+                    ctx.fillRect(correspondingX - 5, minY - 25, textWidth + 10, 20);
+                    
+                    // ✅ TEXT IN CONTRASTING COLOR
+                    ctx.fillStyle = colors.textColor;
+                    ctx.fillText(labelText, correspondingX, minY - 10);
+                }
+            });
+        }
+
+        // Audio Functions
+        function speakDetection() {
+            if (lastDetections.length === 0) {
+                speak("No objects detected");
+                return;
+            }
+            
+            const objectCounts = {};
+            lastDetections.forEach(detection => {
+                objectCounts[detection.label] = (objectCounts[detection.label] || 0) + 1;
+            });
+            
+            const objectList = Object.entries(objectCounts)
+                .slice(0, 6)
+                .map(([obj, count]) => count === 1 ? `1 ${obj}` : `${count} ${obj}s`)
+                .join(', ');
+            
+            speak(`Detected: ${objectList}`);
+        }
+
+        function speak(text) {
+            if (!('speechSynthesis' in window)) {
+                statusElement.textContent = "❌ Audio not supported in this browser";
+                return;
+            }
+            
+            speechSynthesis.cancel();
+            
+            setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                utterance.onstart = () => {
+                    statusElement.textContent = "🔊 Playing audio report...";
+                };
+                
+                utterance.onend = () => {
+                    statusElement.textContent = "✅ Audio report completed";
+                };
+                
+                utterance.onerror = () => {
+                    statusElement.textContent = "❌ Audio error";
+                };
+                
+                speechSynthesis.speak(utterance);
+            }, 100);
+        }
+
+        // UI Updates
+        function updateStats() {
+            objectCountElement.textContent = lastDetections.length;
+            
+            if (lastDetections.length > 0) {
+                const avgConfidence = lastDetections.reduce((sum, det) => sum + det.confidence, 0) / lastDetections.length;
+                confidenceElement.textContent = Math.round(avgConfidence * 100) + '%';
+            } else {
+                confidenceElement.textContent = '0%';
+            }
+        }
+
+        function updateOutput(data) {
+            const timestamp = new Date().toLocaleTimeString();
+            const objects = lastDetections.map(d => 
+                `${d.label} (${Math.round(d.confidence * 100)}%)`
+            ).join(', ');
+            
+            const contrastMode = highContrastMode ? "High Contrast" : "Normal";
+            
+            outputElement.textContent = `Last update: ${timestamp}
+Objects detected: ${lastDetections.length}
+Detections: ${objects || 'None'}
+Visual Mode: ${contrastMode}
+Status: ✅ Success
+
+Press Audio button for voice report.`;
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            initCamera();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopDetection();
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

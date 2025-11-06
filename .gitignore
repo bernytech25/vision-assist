@@ -1,0 +1,125 @@
+# =============================================
+# Python - Virtual environments and cache
+# =============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
+*.pyd
+
+# =============================================
+# YOLO - Models and results (DO NOT version)
+# =============================================
+# YOLO models (download automatically)
+*.pt
+*.pth
+*.weights
+*.onnx
+
+# Inference results (generated automatically)
+runs/
+detect/
+train/
+val/
+exp/
+
+# Ultralytics cache
+.ultralytics/
+ultralytics_logs/
+
+# =============================================
+# Flask - Development
+# =============================================
+instance/
+.webassets-cache
+*.session
+
+# =============================================
+# User files and uploads (DO NOT version)
+# =============================================
+uploads/
+temp/
+temp_uploads/
+static/uploads/
+media/detections/
+
+# =============================================
+# Library cache
+# =============================================
+.cv2/
+.torch/
+torch_cache/
+
+# =============================================
+# Environment variables and secrets
+# =============================================
+.env
+.secrets
+*.env.local
+.env.production
+config_local.py
+
+# =============================================
+# System files and IDEs
+# =============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =============================================
+# Logs
+# =============================================
+*.log
+logs/
+debug.log
+
+# =============================================
+# Specific to your project structure
+# =============================================
+src/__pycache__/
+src/backend/__pycache__/
+src/frontend/__pycache__/
+
+# Frontend dependencies (if you add JavaScript)
+src/frontend/node_modules/
+src/frontend/dist/
+src/frontend/build/
+src/frontend/.parcel-cache/
+
+# Mobile builds
+mobile/build/
+mobile/dist/
+mobile/*.apk
+mobile/*.ipa
+
+# Generated documentation
+docs/_build/
+
+# =============================================
+# Temporary files
+# =============================================
+*.tmp
+*.temp
+.cache/
