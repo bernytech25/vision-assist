@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">VisionAssist 3.0</title>
+  <desc id="description">An eye and audio guidance symbol</desc>
+  <defs>
+    <linearGradient id="surface" x1="70" y1="48" x2="442" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102A40"/>
+      <stop offset="1" stop-color="#07111F"/>
+    </linearGradient>
+    <linearGradient id="vision" x1="92" y1="170" x2="370" y2="344" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#36D5F3"/>
+      <stop offset="1" stop-color="#35D49A"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#surface)"/>
+  <rect x="17" y="17" width="478" height="478" rx="115" fill="none" stroke="#36D5F3" stroke-opacity=".22" stroke-width="2"/>
+
+  <path d="M78 256C126 181 185 144 252 144c48 0 92 19 131 56" fill="none" stroke="url(#vision)" stroke-width="34" stroke-linecap="round"/>
+  <path d="M78 256c48 75 107 112 174 112 48 0 92-19 131-56" fill="none" stroke="url(#vision)" stroke-width="34" stroke-linecap="round"/>
+
+  <circle cx="252" cy="256" r="79" fill="#0B1B2B" stroke="#F5F9FC" stroke-width="18"/>
+  <circle cx="252" cy="256" r="42" fill="url(#vision)"/>
+  <circle cx="238" cy="241" r="11" fill="#F5F9FC" fill-opacity=".9"/>
+
+  <path d="M374 207c20 15 31 31 31 49s-11 34-31 49" fill="none" stroke="#35D49A" stroke-width="20" stroke-linecap="round"/>
+  <path d="M408 177c31 25 47 51 47 79s-16 54-47 79" fill="none" stroke="#36D5F3" stroke-width="16" stroke-linecap="round" opacity=".88"/>
+</svg>

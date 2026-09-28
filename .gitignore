@@ -8,6 +8,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 env.bak/
 venv.bak/
@@ -123,3 +124,16 @@ docs/_build/
 *.tmp
 *.temp
 .cache/
+
+# =============================================
+# Private development materials (DO NOT publish)
+# =============================================
+/.cursor/
+/notes/
+/docs/
+/.visionassist-runtime/
+/.visionassist-mobile-state.json
+/.env.example
+/ERRORES_CORREGIDOS.md
+/setup.txt
+/ChatGPT Image *
